@@ -3,16 +3,16 @@ namespace FibonacciHeap
     public class FibonacciHeap<TKeyValue> where TKeyValue : IComparable
     {
         #region NodeClass
-        internal class Node
+        private class Node
         {
-            internal int Index { get; set; } // This is unique identifier for every node.
-            internal TKeyValue KeyValue { get; set; }
-            internal Node? Parent { get; set; } // Root nodes does not have parent so this property needs to be nullable.
-            internal Node? LeftSibling { get; set; }
-            internal Node? RightSibling { get; set; }
-            internal int Degree { get; set; }
-            internal Node? Child { get; set; }
-            internal bool Marked { get; set; }
+            public int Index { get; set; } // This is unique identifier for every node.
+            public TKeyValue KeyValue { get; set; }
+            public Node? Parent { get; set; } // Root nodes does not have parent so this property needs to be nullable.
+            public Node? LeftSibling { get; set; }
+            public Node? RightSibling { get; set; }
+            public int Degree { get; set; }
+            public Node? Child { get; set; }
+            public bool Marked { get; set; }
 
             public Node(TKeyValue keyValue)
             {
@@ -76,7 +76,8 @@ namespace FibonacciHeap
             size++;
         }
 
-        public string GetMinimum()
+        // This method was made for testing purposes.
+        public string GetMinimumDetails()
         {
             if (minimum == null)
                 return "The heap is empty.";
