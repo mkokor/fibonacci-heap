@@ -33,7 +33,7 @@ namespace FibonacciHeap
 
         private Node? minimum; // When heap is empty this attribute is null (so it has to be nullable).
         private int size; // This attribute will contain current number of nodes.
-        private int uniqueIdentifierGenerator;
+        public static int UniqueIdentifierGenerator { get; set; } // This attribute is public only for testing purposes.
 
         #region ComparingGenericValues
         private static bool IsLessThan(TKeyValue firstOperand, TKeyValue secondOperand)
@@ -51,11 +51,12 @@ namespace FibonacciHeap
         }
         #endregion
 
+        #region Insertion
         public void Insert(TKeyValue value)
         {
             Node newNode = new(value)
             {
-                Index = ++uniqueIdentifierGenerator
+                Index = ++UniqueIdentifierGenerator
             };
             if (minimum == null)
             {
@@ -75,6 +76,47 @@ namespace FibonacciHeap
             }
             size++;
         }
+        #endregion
+
+        #region Union
+        // This method returns first (minimum) and last (minimum.LeftSibling) element of the root list.
+        private static Tuple<Node, Node> GetBorderRoots(FibonacciHeap<TKeyValue> fibonacciHeap)
+        {
+            if (fibonacciHeap.minimum is null) throw new ArgumentException("The heap is empty.");
+            return new Tuple<Node, Node>(fibonacciHeap.minimum!, fibonacciHeap.minimum!.LeftSibling!);
+        }
+
+        private static void Destroy(FibonacciHeap<TKeyValue> fibonacciHeap)
+        {
+            fibonacciHeap.minimum = null;
+            fibonacciHeap.size = 0;
+            UniqueIdentifierGenerator = 0;
+        }
+
+        public static FibonacciHeap<TKeyValue> Unite(FibonacciHeap<TKeyValue> firstHeap, FibonacciHeap<TKeyValue> secondHeap)
+        {
+            if (firstHeap.minimum is null && secondHeap.minimum is null)
+                return new FibonacciHeap<TKeyValue>();
+            FibonacciHeap<TKeyValue> union = new()
+            {
+                minimum = firstHeap.minimum ?? secondHeap.minimum
+            };
+            if (firstHeap.minimum is not null && secondHeap.minimum is not null)
+            {
+                Tuple<Node, Node> unionBorders = FibonacciHeap<TKeyValue>.GetBorderRoots(union);
+                Tuple<Node, Node> secondHeapBorders = FibonacciHeap<TKeyValue>.GetBorderRoots(secondHeap);
+                unionBorders.Item2.RightSibling = secondHeapBorders.Item1;
+                secondHeapBorders.Item1.LeftSibling = unionBorders.Item2;
+                unionBorders.Item1.LeftSibling = secondHeapBorders.Item2;
+                secondHeapBorders.Item2.RightSibling = unionBorders.Item1;
+                union.minimum = IsLessThan(firstHeap.minimum.KeyValue, secondHeap.minimum.KeyValue) ? firstHeap.minimum : secondHeap.minimum;
+            }
+            union.size = firstHeap.size + secondHeap.size;
+            FibonacciHeap<TKeyValue>.Destroy(firstHeap);
+            FibonacciHeap<TKeyValue>.Destroy(secondHeap);
+            return union;
+        }
+        #endregion
 
         // This method was made for testing purposes.
         public string GetMinimumDetails()
@@ -82,6 +124,12 @@ namespace FibonacciHeap
             if (minimum == null)
                 return "The heap is empty.";
             return minimum.ToString();
+        }
+
+        // This method returns number of nodes in the heap.
+        public int GetSize()
+        {
+            return size;
         }
     }
 }
