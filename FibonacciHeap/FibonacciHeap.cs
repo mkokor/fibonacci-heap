@@ -1,3 +1,5 @@
+using System.Runtime.ConstrainedExecution;
+
 namespace FibonacciHeap
 {
     public class FibonacciHeap<TKeyValue> where TKeyValue : IComparable
@@ -52,11 +54,14 @@ namespace FibonacciHeap
         #endregion
 
         #region Insertion
-        public void Insert(TKeyValue value)
+        private void Insert(TKeyValue keyValue, Node? child, int index = int.MinValue, bool updateMinimum = true)
         {
-            Node newNode = new(value)
+            if (int.MinValue == index)
+                UniqueIdentifierGenerator++;
+            Node newNode = new(keyValue)
             {
-                Index = ++UniqueIdentifierGenerator
+                Index = index == int.MinValue ? UniqueIdentifierGenerator : index,
+                Child = child
             };
             if (minimum == null)
             {
@@ -71,10 +76,15 @@ namespace FibonacciHeap
                 newNode.LeftSibling = lastNode;
                 newNode.RightSibling = minimum;
                 minimum.LeftSibling = newNode;
-                if (IsLessThan(newNode.KeyValue, minimum.KeyValue))
+                if (updateMinimum && IsLessThan(newNode.KeyValue, minimum.KeyValue))
                     minimum = newNode;
             }
             size++;
+        }
+
+        public void Insert(TKeyValue value)
+        {
+            Insert(value, null);
         }
         #endregion
 
@@ -115,6 +125,88 @@ namespace FibonacciHeap
             FibonacciHeap<TKeyValue>.Destroy(firstHeap);
             FibonacciHeap<TKeyValue>.Destroy(secondHeap);
             return union;
+        }
+        #endregion
+
+        #region MinimumExtraction
+        private static void LinkTrees(Node firstTreeRoot, Node secondTreeRoot)
+        {
+            secondTreeRoot.LeftSibling!.RightSibling = secondTreeRoot.RightSibling;
+            secondTreeRoot.RightSibling!.LeftSibling = secondTreeRoot.LeftSibling;
+            secondTreeRoot.Parent = firstTreeRoot;
+            if (firstTreeRoot.Child is null)
+            {
+                firstTreeRoot.Child = secondTreeRoot;
+                secondTreeRoot.LeftSibling = secondTreeRoot;
+                secondTreeRoot.RightSibling = secondTreeRoot;
+            }
+            else
+            {
+                firstTreeRoot.Child.RightSibling!.LeftSibling = secondTreeRoot;
+                secondTreeRoot.RightSibling = firstTreeRoot.Child.RightSibling;
+                firstTreeRoot.Child.RightSibling = secondTreeRoot;
+                secondTreeRoot.LeftSibling = firstTreeRoot.Child;
+            }
+            firstTreeRoot.Degree++;
+            secondTreeRoot.Marked = false;
+        }
+
+        private void Consolidate()
+        {
+            int uniqueTreesDegreeUpperBound = (int)Math.Log(size, (1 + Math.Sqrt(5)) / 2);
+            Node?[] degreesArray = new Node[uniqueTreesDegreeUpperBound];
+            List<int> visitedRoots = new();
+            Node currentRoot = minimum!;
+            while (true)
+            {
+                if (visitedRoots.Contains(currentRoot.Index))
+                    break;
+                visitedRoots.Add(currentRoot.Index);
+                int degree = currentRoot.Degree;
+                while (degreesArray[degree] is not null)
+                {
+                    Node degreeEquivalent = degreesArray[degree]!;
+                    if (IsLessThan(degreeEquivalent.KeyValue, currentRoot.KeyValue))
+                        (currentRoot, degreeEquivalent) = (degreeEquivalent, currentRoot);
+                    LinkTrees(currentRoot, degreeEquivalent);
+                    degreesArray[degree] = null;
+                    degree++;
+                }
+                degreesArray[degree] = currentRoot;
+                currentRoot = currentRoot.RightSibling!;
+            }
+            minimum = null;
+            for (int i = 0; i < uniqueTreesDegreeUpperBound; i++)
+                if (degreesArray[i] is null)
+                    continue;
+                else if (minimum is null)
+                    minimum = degreesArray[i];
+                else if (IsLessThan(degreesArray[i]!.KeyValue, minimum.KeyValue))
+                    minimum = degreesArray[i];
+        }
+
+        public TKeyValue ExtractMinimum()
+        {
+            if (minimum is null) throw new NullReferenceException("The heap is empty.");
+            Node criticalNode = minimum;
+            Node? child = minimum.Child;
+            while (child is not null)
+            {
+                Insert(child.KeyValue, child.Child, child.Index, false);
+                child = child.RightSibling;
+                if (child!.Index == minimum.Child!.Index) break;
+            }
+            if (criticalNode == criticalNode.RightSibling)
+                minimum = null;
+            else
+            {
+                criticalNode.LeftSibling!.RightSibling = criticalNode.RightSibling;
+                criticalNode.RightSibling!.LeftSibling = criticalNode.LeftSibling;
+                minimum = minimum.RightSibling;
+                Consolidate();
+            }
+            size--;
+            return criticalNode!.KeyValue;
         }
         #endregion
 
