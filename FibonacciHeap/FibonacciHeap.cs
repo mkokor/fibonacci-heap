@@ -142,10 +142,11 @@ namespace FibonacciHeap
             }
             else
             {
-                firstTreeRoot.Child.RightSibling!.LeftSibling = secondTreeRoot;
+                Node lastChild = firstTreeRoot.Child.RightSibling!;
+                secondTreeRoot.LeftSibling = firstTreeRoot.Child;
                 secondTreeRoot.RightSibling = firstTreeRoot.Child.RightSibling;
                 firstTreeRoot.Child.RightSibling = secondTreeRoot;
-                secondTreeRoot.LeftSibling = firstTreeRoot.Child;
+                lastChild.LeftSibling = secondTreeRoot;
             }
             firstTreeRoot.Degree++;
             secondTreeRoot.Marked = false;

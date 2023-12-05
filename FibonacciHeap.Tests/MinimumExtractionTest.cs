@@ -33,5 +33,36 @@ namespace FibonacciHeap.Tests
             Assert.AreEqual(minimumDetailsExpected, minimumDetailsActual);
         }
 
+        [TestMethod]
+        public void ExtractMinumum_ConsolidationRequired_SetsCorrectMinimum()
+        {
+            FibonacciHeap<int> heap = new();
+            int[] values = new int[] { 1, 4, 20, 90, 9, 4, 3, 0, 100 };
+            foreach (int value in values)
+                heap.Insert(value);
+
+            heap.ExtractMinimum();
+
+            string minimumDetailsExpected = "Index: 1\nValue: 1\nParent: null\nLeftSibling: 1\nRightSibling: 1\nDegree: 3\nChild: 2\nMarked: false";
+            string minimumDetailsActual = heap.GetMinimumDetails();
+
+            Assert.AreEqual(minimumDetailsExpected, minimumDetailsActual);
+        }
+
+        [TestMethod]
+        public void ExtractMinumum_MultipleTreesRemaining_SetsCorrectMinimum()
+        {
+            FibonacciHeap<int> heap = new();
+            int[] values = new int[] { 1, 4, 20, 90 };
+            foreach (int value in values)
+                heap.Insert(value);
+
+            heap.ExtractMinimum();
+
+            string minimumDetailsExpected = "Index: 2\nValue: 4\nParent: null\nLeftSibling: 4\nRightSibling: 4\nDegree: 1\nChild: 3\nMarked: false";
+            string minimumDetailsActual = heap.GetMinimumDetails();
+
+            Assert.AreEqual(minimumDetailsExpected, minimumDetailsActual);
+        }
     }
 }
