@@ -1,4 +1,7 @@
+using System.ComponentModel;
+using System.Reflection.Metadata;
 using System.Runtime.ConstrainedExecution;
+using FibonacciHeap.Exceptions;
 
 namespace FibonacciHeap
 {
@@ -37,6 +40,49 @@ namespace FibonacciHeap
         private int size; // This attribute will contain current number of nodes.
         public static int UniqueIdentifierGenerator { get; set; } // This attribute is public only for testing purposes.
 
+        #region HeapSearching
+        private List<Node> GetBinomialTree(Node root)
+        {
+            List<Node> nodes = new();
+            if (root is null)
+                return nodes;
+            nodes.Add(root);
+            Node? child = root.Child;
+            while (child is not null)
+            {
+                nodes.AddRange(GetBinomialTree(child));
+                child = child.RightSibling;
+            }
+            return nodes;
+        }
+
+        private List<Node> GetAllNodes()
+        {
+            List<Node> nodes = new();
+            Node? currentRoot = minimum;
+            if (currentRoot is null)
+                return nodes;
+            do
+            {
+                nodes.AddRange(GetBinomialTree(currentRoot));
+                currentRoot = currentRoot.RightSibling;
+            } while (currentRoot!.Index != minimum!.Index);
+            return nodes;
+        }
+
+        private Node GetNodeByValue(TKeyValue value)
+        {
+            return GetAllNodes().FirstOrDefault(node => AreEqual(node.KeyValue, value)) ?? throw new NotFoundException("Node with provided value could not be found.");
+        }
+
+        public List<TKeyValue> GetValues()
+        {
+            List<TKeyValue> values = GetAllNodes().Select(node => node.KeyValue).ToList();
+            values.Sort();
+            return values;
+        }
+        #endregion
+
         #region ComparingGenericValues
         private static bool IsLessThan(TKeyValue firstOperand, TKeyValue secondOperand)
         {
@@ -50,6 +96,11 @@ namespace FibonacciHeap
             _ = firstOperand ?? throw new ArgumentNullException(nameof(firstOperand));
             _ = secondOperand ?? throw new ArgumentNullException(nameof(secondOperand));
             return firstOperand?.CompareTo(secondOperand) == 0;
+        }
+
+        private static bool IsLessOrEqualTo(TKeyValue firstOperand, TKeyValue secondOperand)
+        {
+            return IsLessThan(firstOperand, secondOperand) || AreEqual(firstOperand, secondOperand);
         }
         #endregion
 
@@ -211,6 +262,12 @@ namespace FibonacciHeap
         }
         #endregion
 
+        #region KeyDecrease
+        public void DecreaseKey(TKeyValue oldValue, TKeyValue newValue)
+        {
+
+        }
+        #endregion
         // This method was made for testing purposes.
         public string GetMinimumDetails()
         {
