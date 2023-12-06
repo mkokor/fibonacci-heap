@@ -328,8 +328,12 @@ namespace FibonacciHeap
         public void Delete(TKeyValue value)
         {
             if (minimum is null) return;
-            DecreaseKey(value, GetTypeMinimumValue());
-            ExtractMinimum();
+            try
+            {
+                DecreaseKey(value, GetTypeMinimumValue());
+                ExtractMinimum();
+            }
+            catch (NotFoundException) { }
         }
         #endregion
 
