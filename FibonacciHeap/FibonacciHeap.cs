@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Reflection.Metadata;
+using System.Reflection.Metadata.Ecma335;
 using System.Runtime.ConstrainedExecution;
 using FibonacciHeap.Exceptions;
 
@@ -52,6 +53,7 @@ namespace FibonacciHeap
             {
                 nodes.AddRange(GetBinomialTree(child));
                 child = child.RightSibling;
+                if (child!.Index == root.Child!.Index) break;
             }
             return nodes;
         }
@@ -77,9 +79,7 @@ namespace FibonacciHeap
 
         public List<TKeyValue> GetValues()
         {
-            List<TKeyValue> values = GetAllNodes().Select(node => node.KeyValue).ToList();
-            values.Sort();
-            return values;
+            return GetAllNodes().Select(node => node.KeyValue).ToList();
         }
         #endregion
 
@@ -130,12 +130,12 @@ namespace FibonacciHeap
                 if (updateMinimum && IsLessThan(newNode.KeyValue, minimum.KeyValue))
                     minimum = newNode;
             }
-            size++;
         }
 
         public void Insert(TKeyValue value)
         {
             Insert(value, null);
+            size++;
         }
         #endregion
 
@@ -263,11 +263,55 @@ namespace FibonacciHeap
         #endregion
 
         #region KeyDecrease
+        private void Cut(Node child, Node parent)
+        {
+            if (!(child.Parent is not null && parent.Child is not null && child.Parent.Index == parent.Index))
+                return;
+            if (child.LeftSibling!.Index == child.Index)
+                parent.Child = null;
+            else
+            {
+                child.LeftSibling.RightSibling = child.RightSibling;
+                child.RightSibling!.LeftSibling = child.LeftSibling;
+                if (parent.Child.Index == child.Index)
+                    parent.Child = child.LeftSibling;
+            }
+            Insert(child.KeyValue, child.Child, child.Index, false);
+            parent.Degree--;
+        }
+
+        private void CascadingCut(Node node)
+        {
+            Node? parent = node.Parent;
+            if (parent is not null)
+                if (!node.Marked)
+                    node.Marked = true;
+                else
+                {
+                    Cut(node, parent);
+                    CascadingCut(parent);
+                }
+        }
+
         public void DecreaseKey(TKeyValue oldValue, TKeyValue newValue)
         {
-
+            Node node = GetNodeByValue(oldValue);
+            if (IsLessThan(node.KeyValue, newValue))
+                throw new InvalidOperationException("The new key value can not be greater than its current value.");
+            if (AreEqual(node.KeyValue, newValue))
+                return;
+            node.KeyValue = newValue;
+            Node? parent = node.Parent;
+            if (parent is not null && IsLessThan(node.KeyValue, parent.KeyValue))
+            {
+                Cut(node, parent);
+                CascadingCut(parent);
+            }
+            if (IsLessThan(newValue, minimum!.KeyValue))
+                minimum = minimum.LeftSibling;
         }
         #endregion
+
         // This method was made for testing purposes.
         public string GetMinimumDetails()
         {

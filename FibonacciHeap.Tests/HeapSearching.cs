@@ -18,6 +18,7 @@ namespace FibonacciHeap.Tests
                 heap.Insert(value);
 
             List<int> actualResult = heap.GetValues();
+            actualResult.Sort();
             List<int> expectedResult = new() { 0, 1, 3, 4, 4, 9, 20, 90, 100 };
 
             CollectionAssert.AreEqual(expectedResult, actualResult);
