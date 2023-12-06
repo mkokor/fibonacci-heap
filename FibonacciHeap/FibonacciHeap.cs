@@ -312,6 +312,27 @@ namespace FibonacciHeap
         }
         #endregion
 
+        #region Deletion
+        public TKeyValue GetTypeMinimumValue()
+        {
+            try
+            {
+                return (TKeyValue)typeof(TKeyValue).GetField("MinValue")!.GetValue(null)!;
+            }
+            catch
+            {
+                throw new InvalidOperationException($"Unable to get minimum value for \"{typeof(TKeyValue)}\" type.");
+            }
+        }
+
+        public void Delete(TKeyValue value)
+        {
+            if (minimum is null) return;
+            DecreaseKey(value, GetTypeMinimumValue());
+            ExtractMinimum();
+        }
+        #endregion
+
         // This method was made for testing purposes.
         public string GetMinimumDetails()
         {
