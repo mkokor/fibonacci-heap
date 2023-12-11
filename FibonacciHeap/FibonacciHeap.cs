@@ -19,7 +19,7 @@ namespace FibonacciHeap
             public Node(TKeyValue keyValue)
             {
                 // Node will be created as childless root.
-                // Siblings refrences should be explicitly set after the constructor call.
+                // Siblings references should be explicitly set after the constructor call.
                 KeyValue = keyValue;
             }
 
