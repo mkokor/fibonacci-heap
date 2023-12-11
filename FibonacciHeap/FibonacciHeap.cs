@@ -147,7 +147,6 @@ namespace FibonacciHeap
         {
             fibonacciHeap.minimum = null;
             fibonacciHeap.size = 0;
-            UniqueIdentifierGenerator = 0;
         }
 
         public static FibonacciHeap<TKeyValue> Unite(FibonacciHeap<TKeyValue> firstHeap, FibonacciHeap<TKeyValue> secondHeap)
