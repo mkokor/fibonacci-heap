@@ -1,7 +1,7 @@
 ﻿internal class Program
 {
-  private static void Main(string[] args)
-  {
-    Console.WriteLine("Checkout FibonacciHeap class!");
-  }
+	private static void Main(string[] args)
+	{
+		Console.WriteLine("Checkout FibonacciHeap class!");
+	}
 }
